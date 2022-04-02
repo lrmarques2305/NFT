@@ -10,17 +10,14 @@
 	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
 	<style>
 		.logo_buda {
-			max-width: 10%;
+			max-width: 20%;
 			border-radius: 50%;
-			margin: 0 10% 0 0;
-		}
-		
-		.content {
-			margin: 10px 0 10px 0;
 		}
 
 		.container {
-			margin-left: 30%;
+			display: flex;
+			justify-content: center;
+			align-items: center;
 		}
 
 		header {
@@ -32,23 +29,37 @@
 
 <body>
 	<div class="container">
-		<header>
-			<img src="./logo_buda.jpg" class="logo_buda">
-			<h1>NFT Contract</h1>
-		</header>
 		<div class="content">
-			<div class="row">
-				<div class="col">
-					<div class="input">
-						<input id="walletAddress" type="text" placeholder="Insira a carteira destino" required>
-						<input id="imageURI" type="text" placeholder="Insira a url da imagem">
-						<button class="btn waves-effect waves-light" id="createImageNFT">Criar NFT</button>
+			<header>
+				<img src="./logo_buda.jpg" class="logo_buda">
+				<h1>NFT Contract</h1>
+			</header>
+			<div>
+				<div class="row">
+					<div class="input-field">
+						<input id="contractAddress" type="text" required>
+						<label for="contractAddress">Contract Address</label>
 					</div>
 				</div>
-			</div>
-			<div class="row">
-				<div class="col">
-					<div class="output">
+				<div class="row">
+					<div class="input-field">
+						<input id="walletAddress" type="text" required>
+						<label for="walletAddress">Wallet Address</label>
+					</div>
+				</div>
+				<div class="row">
+					<div class="input-field">
+						<input id="imageURI" type="text">
+						<label for="imageURI">Image URL</label>
+					</div>
+				</div>
+				<div class="row">
+					<button class="btn waves-effect waves-light" id="createImageNFT">Airdrop NFT</button>
+				</div>
+				<div class="row">
+					<div class="col">
+						<div class="output">
+						</div>
 					</div>
 				</div>
 			</div>
@@ -64,7 +75,7 @@
 		//Create a constant to maniputale the DOM:
 		const contractReturn = document.querySelector('.output');
 
-		const CONTRACT_ADDRESS = '0x08F97FeBDBB49021e8052E0efc419c388ED8ce74'
+		const CONTRACT_ADDRESS = '0x08F97FeBDBB49021e8052E0efc419c388ED8ce74';
 		const CONTRACT_ABI = `[
 	{
 		"inputs": [
@@ -510,18 +521,18 @@
 ]`
 
 		async function createImageBudaToken() {
-			
+
 			const budaContract = await _getBudaNFTContract();
-			
+
 			var walletAddress = _getFieldValueById("walletAddress");
 			var imageURI = _getFieldValueById("imageURI");
 			if (imageURI != null && imageURI != undefined) {
 				const airdrop = await budaContract.airdrop(walletAddress, imageURI);
-				
+
 				console.log("airdrop: ", airdrop)
 				// Write the greeting result to the DOM.
 				contractReturn.textContent = airdrop;
-				
+
 				return;
 			}
 			const airdrop = await budaContract.mint(walletAddress);
