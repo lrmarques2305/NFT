@@ -2,7 +2,7 @@
 <html lang="en" dir="ltr">
 
 <head>
-	<title>Hello, Ethers!</title>
+	<title>Buda NFT</title>
 	<meta charset="UTF-8" />
 	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 	<script src="https://cdn.jsdelivr.net/npm/web3@latest/dist/web3.min.js"></script>
@@ -64,14 +64,20 @@
 			margin: 5%;
 		}
 
+		.container .card {
+			margin-top: 10%;
+		}
+
 		header {
 			display: flex;
 			margin-top: 1%;
+			margin-bottom: 2%;
 		}
 
 		header h3 {
 			color: #7b448e;
 			width: 100%;
+			margin-left: 2%;
 		}
 	</style>
 </head>
@@ -108,14 +114,10 @@
 
 					<div class="row">
 						<button class="btn" id="createImageNFT">Airdrop NFT</button>
-						<br>
-						<br>
-						<div class="divider"></div>
 					</div>
+
 					<div class="row">
-						<div class="col">
-							<div class="output">
-							</div>
+						<div id="tokenId">
 						</div>
 					</div>
 				</form>
@@ -127,39 +129,34 @@
 
 		document.getElementById("nftForm").addEventListener("submit", createImageBudaToken);
 
-		const contractReturn = document.querySelector('.output');
-
-		var CONTRACT_ABI = ``
-
-		fetch('./contract-abi.json')
-			.then(response => response.json())
-			.then(data => {
-				CONTRACT_ABI = JSON.stringify(data)
-			})
-			.catch(error => alert(error));
-
-
 		async function createImageBudaToken() {
 			const budaContract = await _getBudaNFTContract();
 
 			var walletAddress = _getFieldValueById("walletAddress");
 			var imageURI = _getFieldValueById("imageURI");
-			if (imageURI != null && imageURI != undefined) {
-				const airdrop = await budaContract.mintAndAirDrop(walletAddress, imageURI);
 
-				console.log("mintAndAirDrop: ", airdrop)
-				// Write the greeting result to the DOM.
-				contractReturn.textContent = airdrop;
+			const airdrop = await budaContract.mintAndAirDrop(walletAddress, imageURI);
 
-				return;
-			}
-			const airdrop = await budaContract.mintAndAirDrop(walletAddress);
-			console.log("mintAndAirDrop: ", airdrop)
-			// Write the greeting result to the DOM.
-			contractReturn.textContent = airdrop;
+			var contractResponse = await airdrop.wait();
+
+			return _getTokenId(contractResponse);
+		}
+
+		async function _getTokenId(contractResponse) {
+
+			const event = contractResponse.events.find(event => event.event === 'Transfer');
+
+			var outputElement = document.getElementById('tokenId');
+
+			outputElement.textContent = "Token Id: " + event.args.tokenId.toString();
+
+
+			return;
 		}
 
 		async function _getBudaNFTContract() {
+			var contractAbi = await _getContractABI();
+
 			var contractAddress = _getFieldValueById("contractAddress");
 
 			await ethereum.request({ method: 'eth_requestAccounts' });
@@ -169,11 +166,16 @@
 			const signer = provider.getSigner();
 
 			// Connect to the greeter contract.
-			return new ethers.Contract(contractAddress, CONTRACT_ABI, signer);
+			return new ethers.Contract(contractAddress, contractAbi, signer);
 		}
 
 		function _getFieldValueById(fieldId) {
 			return document.getElementById(fieldId).value
+		}
+
+		async function _getContractABI() {
+			var abi = await fetch('./contract-abi.json');
+			return await abi.json();
 		}
 	</script>
 </body>
