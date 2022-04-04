@@ -2,535 +2,163 @@
 <html lang="en" dir="ltr">
 
 <head>
-	<title>Hello, Ethers!</title>
+	<title>Buda NFT</title>
 	<meta charset="UTF-8" />
 	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 	<script src="https://cdn.jsdelivr.net/npm/web3@latest/dist/web3.min.js"></script>
 
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
 	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
 	<style>
 		.logo_buda {
-			max-width: 10%;
+			width: 100%;
 			border-radius: 50%;
-			margin: 0 10% 0 0;
+			height: auto;
 		}
-		
-		.content {
-			margin: 10px 0 10px 0;
+
+		.logo {
+			max-width: 20%;
 		}
 
 		.container {
-			margin-left: 30%;
+			display: flex;
+			justify-content: center;
+			align-items: center;
+		}
+
+		.input-field label {
+			color: #7b448e !important;
+		}
+
+		/* label focus color */
+		.input-field input:focus+label {
+			color: #7b448e !important;
+		}
+
+		/* label underline focus color */
+		.input-field input:focus {
+			border-bottom: 1px solid #7b448e !important;
+			box-shadow: 0 1px 0 0 #7b448e !important;
+		}
+
+		/* valid color */
+		.input-field input.valid {
+			border-bottom: 1px solid #7b448e !important;
+			box-shadow: 0 1px 0 0 #7b448e !important;
+		}
+
+		/* icon prefix focus color */
+		.input-field .prefix.active {
+			color: #7b448e !important;
+		}
+
+		.btn {
+			background-color: #7b448e;
+		}
+
+		.btn:hover {
+			background-color: #9870a5;
+		}
+
+		.content {
+			margin: 5%;
+		}
+
+		.container .card {
+			margin-top: 10%;
 		}
 
 		header {
 			display: flex;
 			margin-top: 1%;
+			margin-bottom: 2%;
+		}
+
+		header h3 {
+			color: #7b448e;
+			width: 100%;
+			margin-left: 2%;
 		}
 	</style>
 </head>
 
 <body>
 	<div class="container">
-		<header>
-			<img src="./logo_buda.jpg" class="logo_buda">
-			<h1>NFT Contract</h1>
-		</header>
-		<div class="content">
-			<div class="row">
-				<div class="col">
-					<div class="input">
-						<input id="walletAddress" type="text" placeholder="Insira a carteira destino" required>
-						<input id="imageURI" type="text" placeholder="Insira a url da imagem">
-						<button class="btn waves-effect waves-light" id="createImageNFT">Criar NFT</button>
+		<div class="card">
+			<div class="content">
+				<header>
+					<div class="logo">
+						<img src="./logo_buda.jpg" class="logo_buda">
 					</div>
-				</div>
-			</div>
-			<div class="row">
-				<div class="col">
-					<div class="output">
+					<h3>NFT Contract</h3>
+				</header>
+				<form id="nftForm" onsubmit="event.preventDefault()">
+					<div class="row">
+						<div class="input-field">
+							<input id="contractAddress" class="validate" type="text" required>
+							<label for="contractAddress">Contract Address</label>
+						</div>
 					</div>
-				</div>
+					<div class="row">
+						<div class="input-field">
+							<input id="walletAddress" class="validate" type="text" required>
+							<label for="walletAddress">Wallet Address</label>
+						</div>
+					</div>
+					<div class="row">
+						<div class="input-field">
+							<input id="imageURI" type="text">
+							<label for="imageURI">Image URL</label>
+						</div>
+					</div>
+
+					<div class="row">
+						<button class="btn" id="createImageNFT">Airdrop NFT</button>
+					</div>
+
+					<div class="row">
+						<div id="tokenId">
+						</div>
+					</div>
+				</form>
 			</div>
 		</div>
 	</div>
-	<script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
 	<script type="module">
 		import { ethers } from "./ethers-5.1.esm.min.js";
-		//const ethers = require('./ethers-5.1.esm.min.js')
 
-		document.getElementById("createImageNFT").addEventListener("click", createImageBudaToken);
-
-		//Create a constant to maniputale the DOM:
-		const contractReturn = document.querySelector('.output');
-
-		const CONTRACT_ADDRESS = '0x08F97FeBDBB49021e8052E0efc419c388ED8ce74'
-		const CONTRACT_ABI = `[
-	{
-		"inputs": [
-			{
-				"internalType": "string",
-				"name": "tokenName",
-				"type": "string"
-			},
-			{
-				"internalType": "string",
-				"name": "symbol",
-				"type": "string"
-			}
-		],
-		"stateMutability": "nonpayable",
-		"type": "constructor"
-	},
-	{
-		"anonymous": false,
-		"inputs": [
-			{
-				"indexed": true,
-				"internalType": "address",
-				"name": "owner",
-				"type": "address"
-			},
-			{
-				"indexed": true,
-				"internalType": "address",
-				"name": "approved",
-				"type": "address"
-			},
-			{
-				"indexed": true,
-				"internalType": "uint256",
-				"name": "tokenId",
-				"type": "uint256"
-			}
-		],
-		"name": "Approval",
-		"type": "event"
-	},
-	{
-		"anonymous": false,
-		"inputs": [
-			{
-				"indexed": true,
-				"internalType": "address",
-				"name": "owner",
-				"type": "address"
-			},
-			{
-				"indexed": true,
-				"internalType": "address",
-				"name": "operator",
-				"type": "address"
-			},
-			{
-				"indexed": false,
-				"internalType": "bool",
-				"name": "approved",
-				"type": "bool"
-			}
-		],
-		"name": "ApprovalForAll",
-		"type": "event"
-	},
-	{
-		"anonymous": false,
-		"inputs": [
-			{
-				"indexed": true,
-				"internalType": "address",
-				"name": "previousOwner",
-				"type": "address"
-			},
-			{
-				"indexed": true,
-				"internalType": "address",
-				"name": "newOwner",
-				"type": "address"
-			}
-		],
-		"name": "OwnershipTransferred",
-		"type": "event"
-	},
-	{
-		"anonymous": false,
-		"inputs": [
-			{
-				"indexed": true,
-				"internalType": "address",
-				"name": "from",
-				"type": "address"
-			},
-			{
-				"indexed": true,
-				"internalType": "address",
-				"name": "to",
-				"type": "address"
-			},
-			{
-				"indexed": true,
-				"internalType": "uint256",
-				"name": "tokenId",
-				"type": "uint256"
-			}
-		],
-		"name": "Transfer",
-		"type": "event"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "to",
-				"type": "address"
-			},
-			{
-				"internalType": "string",
-				"name": "metadataURI",
-				"type": "string"
-			}
-		],
-		"name": "airdrop",
-		"outputs": [
-			{
-				"internalType": "uint256",
-				"name": "",
-				"type": "uint256"
-			}
-		],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "to",
-				"type": "address"
-			},
-			{
-				"internalType": "uint256",
-				"name": "tokenId",
-				"type": "uint256"
-			}
-		],
-		"name": "approve",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "owner",
-				"type": "address"
-			}
-		],
-		"name": "balanceOf",
-		"outputs": [
-			{
-				"internalType": "uint256",
-				"name": "",
-				"type": "uint256"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "uint256",
-				"name": "tokenId",
-				"type": "uint256"
-			}
-		],
-		"name": "getApproved",
-		"outputs": [
-			{
-				"internalType": "address",
-				"name": "",
-				"type": "address"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "owner",
-				"type": "address"
-			},
-			{
-				"internalType": "address",
-				"name": "operator",
-				"type": "address"
-			}
-		],
-		"name": "isApprovedForAll",
-		"outputs": [
-			{
-				"internalType": "bool",
-				"name": "",
-				"type": "bool"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "to",
-				"type": "address"
-			}
-		],
-		"name": "mint",
-		"outputs": [
-			{
-				"internalType": "uint256",
-				"name": "",
-				"type": "uint256"
-			}
-		],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"name": "name",
-		"outputs": [
-			{
-				"internalType": "string",
-				"name": "",
-				"type": "string"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"name": "owner",
-		"outputs": [
-			{
-				"internalType": "address",
-				"name": "",
-				"type": "address"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "uint256",
-				"name": "tokenId",
-				"type": "uint256"
-			}
-		],
-		"name": "ownerOf",
-		"outputs": [
-			{
-				"internalType": "address",
-				"name": "",
-				"type": "address"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"name": "renounceOwnership",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "from",
-				"type": "address"
-			},
-			{
-				"internalType": "address",
-				"name": "to",
-				"type": "address"
-			},
-			{
-				"internalType": "uint256",
-				"name": "tokenId",
-				"type": "uint256"
-			}
-		],
-		"name": "safeTransferFrom",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "from",
-				"type": "address"
-			},
-			{
-				"internalType": "address",
-				"name": "to",
-				"type": "address"
-			},
-			{
-				"internalType": "uint256",
-				"name": "tokenId",
-				"type": "uint256"
-			},
-			{
-				"internalType": "bytes",
-				"name": "_data",
-				"type": "bytes"
-			}
-		],
-		"name": "safeTransferFrom",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "operator",
-				"type": "address"
-			},
-			{
-				"internalType": "bool",
-				"name": "approved",
-				"type": "bool"
-			}
-		],
-		"name": "setApprovalForAll",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "bytes4",
-				"name": "interfaceId",
-				"type": "bytes4"
-			}
-		],
-		"name": "supportsInterface",
-		"outputs": [
-			{
-				"internalType": "bool",
-				"name": "",
-				"type": "bool"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"name": "symbol",
-		"outputs": [
-			{
-				"internalType": "string",
-				"name": "",
-				"type": "string"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "uint256",
-				"name": "tokenId",
-				"type": "uint256"
-			}
-		],
-		"name": "tokenURI",
-		"outputs": [
-			{
-				"internalType": "string",
-				"name": "",
-				"type": "string"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "from",
-				"type": "address"
-			},
-			{
-				"internalType": "address",
-				"name": "to",
-				"type": "address"
-			},
-			{
-				"internalType": "uint256",
-				"name": "tokenId",
-				"type": "uint256"
-			}
-		],
-		"name": "transferFrom",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "newOwner",
-				"type": "address"
-			}
-		],
-		"name": "transferOwnership",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	}
-]`
+		document.getElementById("nftForm").addEventListener("submit", createImageBudaToken);
 
 		async function createImageBudaToken() {
-			
 			const budaContract = await _getBudaNFTContract();
-			
+
 			var walletAddress = _getFieldValueById("walletAddress");
 			var imageURI = _getFieldValueById("imageURI");
-			if (imageURI != null && imageURI != undefined) {
-				const airdrop = await budaContract.airdrop(walletAddress, imageURI);
-				
-				console.log("airdrop: ", airdrop)
-				// Write the greeting result to the DOM.
-				contractReturn.textContent = airdrop;
-				
-				return;
-			}
-			const airdrop = await budaContract.mint(walletAddress);
-			console.log("airdrop: ", airdrop)
-			// Write the greeting result to the DOM.
-			contractReturn.textContent = airdrop;
+
+			const airdrop = await budaContract.mintAndAirDrop(walletAddress, imageURI);
+
+			var contractResponse = await airdrop.wait();
+
+			return _getTokenId(contractResponse);
+		}
+
+		async function _getTokenId(contractResponse) {
+
+			const event = contractResponse.events.find(event => event.event === 'Transfer');
+
+			var outputElement = document.getElementById('tokenId');
+
+			outputElement.textContent = "Token Id: " + event.args.tokenId.toString();
+
+
+			return;
 		}
 
 		async function _getBudaNFTContract() {
+			var contractAbi = await _getContractABI();
+
+			var contractAddress = _getFieldValueById("contractAddress");
+
 			await ethereum.request({ method: 'eth_requestAccounts' });
 			const provider = new ethers.providers.Web3Provider(window.ethereum);
 
@@ -538,11 +166,16 @@
 			const signer = provider.getSigner();
 
 			// Connect to the greeter contract.
-			return new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
+			return new ethers.Contract(contractAddress, contractAbi, signer);
 		}
 
 		function _getFieldValueById(fieldId) {
 			return document.getElementById(fieldId).value
+		}
+
+		async function _getContractABI() {
+			var abi = await fetch('./contract-abi.json');
+			return await abi.json();
 		}
 	</script>
 </body>
